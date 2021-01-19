@@ -29,6 +29,11 @@ dataset = pd.read_csv('Data/Ecommerce_Customers.csv')
 dataset.info()
 dataset.Address
 
+# Visualize the dataset
+sns.pairplot(dataset) # hue=None, palette=None, vars=[None], x_vars=[None], y_vars=[None], dropna=True, kind = 'reg' to find linearity, 'scatter' is default 
+# Here the Length of Membership seems to have a linear relationship with Yearlt amount spent
+
+
 # One thing to note is that I’m assuming outliers have been removed 
 
 # Manipulate the dataset (add new feaures based on data, etc.)
@@ -60,13 +65,20 @@ regressor = LinearRegression()
 regressor.fit(X_train, y_train)
 
 # Returning the R^2 for the model
-regressor_r2 = regressor.score(X_train, y_train)
-print('R^2: {0}'.format(regressor_r2))
+# .score() automatically scores y_train_pred, and compares those with y_train to calculate the R^2
+regressor_r2 = regressor.score(X_train, y_train) 
+print('R^2:', regressor_r2)
+# Instead of using .score() we could also use r2_score()
+# But we will first need to manually score y_train_pred values
+from sklearn.metrics import r2_score
+y_train_pred = regressor.predict(X_train)
+r2 = r2_score(y_train, y_train_pred)
+print('R^2:', r2)
 
 # Predicting the Test set results
-y_pred = regressor.predict(X_test)
+y_test_pred = regressor.predict(X_test)
 np.set_printoptions(precision=2)
-print(np.concatenate((y_pred.reshape(len(y_pred),1), y_test.reshape(len(y_test),1)),1))
+print(np.concatenate((y_test_pred.reshape(len(y_test_pred),1), y_test.reshape(len(y_test),1)),1))
 
 
 def calculate_residuals(model, features, label):
@@ -76,7 +88,6 @@ def calculate_residuals(model, features, label):
     predictions = model.predict(features)
     df_results = pd.DataFrame({'Actual': label, 'Predicted': predictions})
     df_results['Residuals'] = abs(df_results['Actual']) - abs(df_results['Predicted'])
-    
     return df_results
 
 '''
@@ -314,7 +325,7 @@ homoscedasticity_assumption(regressor, X_train, y_train)
 
 
 #############################################################################
-##################  Code for the Master FunctionPermalink  ##################
+#######################  Code for the Master Function #######################
 #############################################################################
 
 def linear_regression_assumptions(features, label, feature_names=None):
@@ -526,5 +537,167 @@ def linear_regression_assumptions(features, label, feature_names=None):
     multicollinearity_assumption()
     autocorrelation_assumption()
     homoscedasticity_assumption()
+
+
+#############################################################################
+########################  Code for Model Validation  ########################
+#############################################################################
+from sklearn.model_selection import RepeatedKFold
+
+
+#############################################################################
+########################  Code for Model Evaluation  ########################
+#############################################################################
+'''
+sklearn package provides various model evaluation metrics. Following are the important ones:
+- Max_error
+- Mean Absolute Error
+- Mean Squared Error
+- Median Squared Error
+- R Squared
+'''
+
+def model_evaluation(original_data,predicted_data):
+    # Max_error
+    from sklearn.metrics import max_error
+    me = max_error(original_data,predicted_data)
+    print('1. Max_error: \t\t\t',me)
+    # Mean Absolute Error
+    from sklearn.metrics import mean_absolute_error
+    mae = mean_absolute_error(original_data,predicted_data)
+    print('2. Mean absolute error: \t',mae)
+    # Mean Squared Error
+    from sklearn.metrics import mean_squared_error
+    mse = mean_squared_error(original_data,predicted_data)
+    print('3. Mean Squared Error: \t\t',mse)
+    # Median Squared Error
+    from sklearn.metrics import median_absolute_error
+    med_ae = median_absolute_error(original_data,predicted_data)
+    print('4. Median Squared Error: \t',med_ae)
+    # R Squared
+    from sklearn.metrics import r2_score
+    r2 = r2_score(original_data,predicted_data)
+    print('5. R Squared: \t\t\t',r2)
+
+model_evaluation(y_test, y_test_pred)
+
+
+#############################################################################
+#####################  Overfitting: R^2 is too high  ########################
+#############################################################################
+# One of the most common problems that you’ll encounter when building models is 
+# multicollinearity. This occurs when two or more predictor variables in a dataset
+# are highly correlated.
+
+# Calculate the correlation matrix and VIF values for the predictor variables
+
+# correlation matrix
+https://www.statology.org/how-to-read-a-correlation-matrix/
+https://www.statology.org/correlation-matrix-python/
+
+# VIF: high VIF values (some texts define a “high” VIF value as 5 while others use 10) indicate multicollinearity
+https://www.statology.org/multicollinearity-regression/
+https://www.analyticsvidhya.com/blog/2020/03/what-is-multicollinearity/
+
+#############################################################################
+###############  Avoid Overfitting using Subset Selection  ##################
+#############################################################################
+
+    Best subset selection - https://www.statology.org/best-subset-selection/
+    Stepwise selection - https://www.statology.org/stepwise-selection/
+
+#############################################################################
+###############  Avoid Overfitting using Regularization  ####################
+#############################################################################
+
+# Regularization can be achieved using either of the following two models
+# Ridge Regression
+# Lasso Regression
+
+# Original model - ordinary least square regression model
+# Y = β0 + β1X1 + β2X2 + … + βpXp + ε
+# Y: The response variable
+# Xj: The jth predictor variable
+# βj: The average effect on Y of a one unit increase in Xj, holding all other predictors fixed
+# ε: The error term
+# The values for β0, β1, B2, … , βp are chosen using the least square method, which minimizes the sum of squared residuals (RSS)
+# least squares regression tries to find coefficient estimates that minimize the sum of squared residuals (RSS):
+# RSS = Σ(yi – ŷi)^2
+# yi: The actual response value for the ith observation
+# ŷi: The predicted response value based on the multiple linear regression model
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor.fit(X_train, y_train)
+print('Without Regularization -> r2 for training set:',regressor.score(X_train, y_train),'and test set:',regressor.score(X_test, y_test)) 
+
+# Ridge regression - Regularizing the linear model
+# The basic idea of ridge regression is to introduce a little bias so that the variance can be substantially reduced, which leads to a lower overall MSE.
+# ridge regression, seeks to minimize the following:
+# RSS + λΣβj2
+# where j ranges from 1 to p and λ ≥ 0
+# This second term in the equation is known as a shrinkage penalty.
+# When λ = 0, this penalty term has no effect and ridge regression produces the same coefficient estimates as least squares. However, as λ approaches infinity, the shrinkage penalty becomes more influential and the ridge regression coefficient estimates approach zero.
+# In general, the predictor variables that are least influential in the model will shrink towards zero the fastest.
+# Regularization, significantly reduces the variance of the model, without substantial increase in its bias.
+# Using Ridge()
+from sklearn.linear_model import Ridge
+#alpha =0.5
+ridge_reg=Ridge(alpha=0.5,normalize=True)
+ridge_reg.fit(X_train,y_train)
+print('Ridge Regres alpha=0.5 -> r2 for training set:',ridge_reg.score(X_train, y_train),'and test set:',ridge_reg.score(X_test, y_test)) 
+#alpha =1
+ridge_reg=Ridge(alpha=1,normalize=True)
+ridge_reg.fit(X_train,y_train)
+print('Ridge Regressi alpha=1 -> r2 for training set:',ridge_reg.score(X_train, y_train),'and test set:',ridge_reg.score(X_test, y_test)) 
+#alpha =2
+ridge_reg=Ridge(alpha=2,normalize=True)
+ridge_reg.fit(X_train,y_train)
+print('Ridge Regressi alpha=2 -> r2 for training set:',ridge_reg.score(X_train, y_train),'and test set:',ridge_reg.score(X_test, y_test)) 
+
+# Using RidgeCV() - https://www.statology.org/ridge-regression-in-python/
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeCV
+from sklearn.model_selection import RepeatedKFold
+#define cross-validation method to evaluate model
+cv = RepeatedKFold(n_splits=10, n_repeats=3, random_state=1)
+#define model
+ridge_reg = RidgeCV(alphas=np.arange(0, 1, 0.01), cv=cv, scoring='neg_mean_absolute_error')
+#fit model
+ridge_reg.fit(X_train, y_train)
+#display lambda that produced the lowest test MSE
+print('Ridge Regression -> best alpha (that produced the lowest test MSE):', ridge_reg.alpha_)
+# R^2 of the model 
+print('Ridge Regression -> r2 for training set:',ridge_reg.score(X_train, y_train),'and test set:',ridge_reg.score(X_test, y_test)) 
+
+
+# Lasso Regression - use to fit a regression model when multicollinearity is present in the data
+# lasso regression seeks to minimize the following:
+# RSS + λΣ|βj|
+# where j ranges from 1 to p predictor variables and λ ≥ 0.
+# This second term in the equation is known as a shrinkage penalty. 
+# We select a value for λ that produces the lowest possible test MSE (mean squared error).
+# Note: “alpha” is used instead of “lambda” in Python
+from sklearn.linear_model import LassoCV
+from sklearn.model_selection import RepeatedKFold # use the RepeatedKFold() function to perform k-fold cross-validation to find the optimal alpha value to use for the penalty term
+#define cross-validation method to evaluate model
+cv = RepeatedKFold(n_splits=10, n_repeats=3, random_state=1)
+#define model
+lasso_reg = LassoCV(alphas=np.arange(0, 1, 0.01), cv=cv, n_jobs=-1)
+#fit model
+lasso_reg.fit(X_train, y_train)
+#display lambda that produced the lowest test MSE
+print('Lasso Regression -> best alpha (that produced the lowest test MSE):', lasso_reg.alpha_)
+# R^2 of the model 
+print('Lasso Regression -> r2 for training set:',lasso_reg.score(X_train, y_train),'and test set:',lasso_reg.score(X_test, y_test)) 
+
+
+
+#############################################################################
+########  Deal with multicollinearity using dimension reduction  ############
+####################  principal components regression  ######################
+#############################################################################
+https://www.statology.org/principal-components-regression/
+https://www.statology.org/principal-components-regression-in-python/
+
 
 
