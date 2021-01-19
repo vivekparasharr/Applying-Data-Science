@@ -589,22 +589,114 @@ model_evaluation(y_test, y_test_pred)
 # multicollinearity. This occurs when two or more predictor variables in a dataset
 # are highly correlated.
 
+import seaborn as sns
+sns.get_dataset_names()
+tips = sns.load_dataset("tips")
+tips.plot(x='total_bill', y='tip', kind='scatter')
+
+'''
+Methods for correlation analyses:
+1. Parametric Correlation : It measures a linear dependence between two variables 
+(x and y) is known as a parametric correlation test because it depends on the 
+distribution of the data.
+'''
+# a. Pearson correlation
+from scipy.stats import pearsonr 
+corr, _ = pearsonr(tips.total_bill, tips.tip)   # Apply the pearsonr() 
+print('Pearsons correlation: %.5f' % corr) 
+
+'''
+2. Non-Parametric Correlation: Kendall(tau) and Spearman(rho), which are 
+rank-based correlation coefficients, are known as non-parametric correlation.
+'''
+# a. Kendall
+from scipy.stats import kendalltau 
+corr, _ = kendalltau(tips.total_bill, tips.tip) 
+print('Kendall Rank correlation: %.5f' % corr) 
+# b. Spearman
+from scipy.stats import spearmanr
+corr, _ = spearmanr(tips.total_bill, tips.tip) 
+print('Spearman Rank correlation: %.5f' % corr) 
+
+
 # Calculate the correlation matrix and VIF values for the predictor variables
 
-# correlation matrix
-https://www.statology.org/how-to-read-a-correlation-matrix/
-https://www.statology.org/correlation-matrix-python/
+# correlation matrix (based on Pearson correlation coefficient)
+tips.corr()
+tips.corr().round(3)
+tips.corr().style.background_gradient(cmap='coolwarm') # cmap='RdYlGn', 'bwr', 'PuOr', 
+
 
 # VIF: high VIF values (some texts define a “high” VIF value as 5 while others use 10) indicate multicollinearity
-https://www.statology.org/multicollinearity-regression/
-https://www.analyticsvidhya.com/blog/2020/03/what-is-multicollinearity/
+#create dataset
+df = pd.DataFrame({'rating': [90, 85, 82, 88, 94, 90, 76, 75, 87, 86],
+                   'points': [25, 20, 14, 16, 27, 20, 12, 15, 14, 19],
+                   'assists': [5, 7, 7, 8, 5, 7, 6, 9, 9, 5],
+                   'rebounds': [11, 8, 10, 6, 6, 9, 6, 10, 10, 7]})
+from patsy import dmatrices
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+#find design matrix for linear regression model using 'rating' as response variable 
+y, X = dmatrices('rating ~ points+assists+rebounds', data=df, return_type='dataframe')
+#calculate VIF for each explanatory variable
+vif = pd.DataFrame()
+vif['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+vif['variable'] = X.columns
+#view VIF for each explanatory variable 
+vif
+# How to Interpret VIF Values:
+# A value of 1 indicates there is no correlation between a given explanatory variable and any other explanatory variables in the model.
+# A value between 1 and 5 indicates moderate correlation between a given explanatory variable and other explanatory variables in the model, but this is often not severe enough to require attention.
+# A value greater than 5 indicates potentially severe correlation between a given explanatory variable and other explanatory variables in the model. In this case, the coefficient estimates and p-values in the regression output are likely unreliable.
+
 
 #############################################################################
 ###############  Avoid Overfitting using Subset Selection  ##################
 #############################################################################
 
-    Best subset selection - https://www.statology.org/best-subset-selection/
-    Stepwise selection - https://www.statology.org/stepwise-selection/
+'''
+Best subset selection 
+Given a set of p total predictor variables, there are 2^p models that we could 
+potentially build. One method that we can use to pick the best model is known 
+as best subset selection and it works as follows:
+1. Let M0 denote the null model, which contains no predictor variables. 
+2. For k = 1, 2, … p:
+    Fit all pCk models that contain exactly k predictors.
+    Pick the best among these pCk models and call it Mk. Define “best” as the model 
+    with the highest R2 or equivalently the lowest RSS.
+3. Select a single best model from among M0…Mp using cross-validation prediction 
+error, Cp, BIC, AIC, or adjusted R2.
+Note that for a set of p predictor variables, there are 2p possible models. 
+
+Criteria for Choosing the “Best” Model
+1. Cp: (RSS+2dσ̂) / n
+2. AIC: (RSS+2dσ̂2) / (nσ̂2)
+3. BIC: (RSS+log(n)dσ̂2) / n
+4. Adjusted R2: 1 – ( (RSS/(n-d-1)) / (TSS / (n-1)) )
+where:
+    d: The number of predictors
+    n: Total observations
+    σ̂: Estimate of the variance of the error associate with each response measurement in a regression model
+    RSS: Residual sum of squares of the regression model
+    TSS: Total sum of squares of the regression model
+'''
+
+'''
+Stepwise selection - there are two approaches: forward and backward stepwise
+Forward stepwise selection works as follows:
+1. Let M0 denote the null model, which contains no predictor variables. 
+2. For k = 0, 2, … p-1:
+    Fit all p-k models that augment the predictors in Mk with one additional predictor variable.
+    Pick the best among these p-k models and call it Mk+1. Define “best” as the model with the highest R2 or equivalently the lowest RSS.
+3. Select a single best model from among M0…Mp using cross-validation prediction error, Cp, BIC, AIC, or adjusted R2.
+
+Backward stepwise selection works as follows:
+1. Let Mp denote the full model, which contains all p predictor variables. 
+2. For k = p, p-1, … 1:
+    Fit all k models that contain all but one of the predictors in Mk, for a total of k-1 predictor variables.
+    Pick the best among these k models and call it Mk-1. Define “best” as the model with the highest R2 or equivalently the lowest RSS.
+3. Select a single best model from among M0…Mp using cross-validation prediction error, Cp, BIC, AIC, or adjusted R2.
+'''
+
 
 #############################################################################
 ###############  Avoid Overfitting using Regularization  ####################
@@ -696,8 +788,79 @@ print('Lasso Regression -> r2 for training set:',lasso_reg.score(X_train, y_trai
 ########  Deal with multicollinearity using dimension reduction  ############
 ####################  principal components regression  ######################
 #############################################################################
-https://www.statology.org/principal-components-regression/
-https://www.statology.org/principal-components-regression-in-python/
+
+# principal components regression, which finds M linear combinations (known as “principal components”) of the original p predictors and then uses least squares to fit a linear regression model using the principal components as predictors.
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale 
+from sklearn import model_selection
+from sklearn.model_selection import RepeatedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# We’ll use hp as the response variable and the following variables as the predictors: mpg, disp, drat, wt, qsec
+data_full = pd.read_csv('https://raw.githubusercontent.com/Statology/Python-Guides/main/mtcars.csv')
+data = data_full[["mpg", "disp", "drat", "wt", "qsec", "hp"]]
+'''
+Fit the PCR Model:
+1. pca.fit_transform(scale(X)): This tells Python that each of the predictor variables should be scaled to have a mean of 0 and a standard deviation of 1. This ensures that no predictor variable is overly influential in the model if it happens to be measured in different units.
+2. cv = RepeatedKFold(): This tells Python to use k-fold cross-validation to evaluate the performance of the model. For this example we choose k = 10 folds, repeated 3 times.
+'''
+#define predictor and response variables
+X = data[["mpg", "disp", "drat", "wt", "qsec"]]
+y = data[["hp"]]
+#scale predictor variables
+pca = PCA()
+X_reduced = pca.fit_transform(scale(X))
+#define cross validation method
+cv = RepeatedKFold(n_splits=10, n_repeats=3, random_state=1)
+
+regr = LinearRegression()
+mse = []
+# Calculate MSE with only the intercept
+score = -1*model_selection.cross_val_score(regr,
+           np.ones((len(X_reduced),1)), y, cv=cv,
+           scoring='neg_mean_squared_error').mean()    
+mse.append(score)
+# Calculate MSE using cross-validation, adding one component at a time
+for i in np.arange(1, 6):
+    score = -1*model_selection.cross_val_score(regr,
+               X_reduced[:,:i], y, cv=cv, scoring='neg_mean_squared_error').mean()
+    mse.append(score)
+# Plot cross-validation results    
+plt.plot(mse) # The plot displays the number of principal components along the x-axis and the test MSE (mean squared error) along the y-axis.
+plt.xlabel('Number of Principal Components')
+plt.ylabel('MSE')
+plt.title('hp')
+# Interpret the plot: From the plot we can see that the test MSE decreases by 
+# adding in two principal components, yet it begins to increase as we add more 
+# than two principal components. Thus, the optimal model includes just the first 
+# two principal components.
+
+# We can also use the following code to calculate the percentage of variance in the response variable explained by adding in each principal component to the model:
+np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4)*100)
+# Interpreting the result:
+# By using just the first principal component, we can explain 69.83% of the variation in the response variable.
+# By adding in the second principal component, we can explain 89.35% of the variation in the response variable.
+
+#Use the Final Model to Make Predictions
+#split the dataset into training (70%) and testing (30%) sets
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=0) 
+#scale the training and testing data
+X_reduced_train = pca.fit_transform(scale(X_train))
+X_reduced_test = pca.transform(scale(X_test))[:,:1]
+#train PCR model on training data 
+regr = LinearRegression()
+regr.fit(X_reduced_train[:,:1], y_train)
+#calculate RMSE
+pred = regr.predict(X_reduced_test)
+np.sqrt(mean_squared_error(y_test, pred))
+# RMSE turns out to be 40.2096. This is the average deviation between the 
+# predicted value for hp and the observed value for hp for the observations 
+# in the testing set.
 
 
 
