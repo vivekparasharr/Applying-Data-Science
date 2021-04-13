@@ -40,16 +40,23 @@ bank_full.info()
 def vp_summ(df):
     print('#columns:', df.shape[1]) # number of columns
     print('#rows:', df.shape[0]) # number of rows
+    i = -1
     for r in df.columns:
-        print(r, ':', # column name
+        i+=1
+        print(i, '|', r, ':', # column name
         df[r].unique().shape[0], # number of unique elements in the column
         '| example:', df[r][0]) # example of the first element in the column
 vp_summ(bank_full)
 
-X = bank_full.ix[:,(18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36)].values
+X = bank_full.iloc[:,18:36].values
 
-y = bank_full.ix[:,17].values
+y = bank_full.iloc[:,17].values
 
+LogReg = LogisticRegression()
+LogReg.fit(X, y)
 
+new_user = np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1])
+y_pred = LogReg.predict(new_user)
+y_pred
 
 
