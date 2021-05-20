@@ -27,7 +27,7 @@ import numpy as np
 
 
 
-data = pd.read_excel("Online_Retail.xlsx")
+data = pd.read_excel("Data/Online_Retail.xlsx")
 data.head()
 
 data.info()
