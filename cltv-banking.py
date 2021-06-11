@@ -187,12 +187,24 @@ summary = lifetimes.utils.summary_data_from_transaction_data(df2, 'CustomerID', 
 summary = summary.reset_index()
 summary.head()
 
+'''SQL statement to transform transactional data into RFM data
+SELECT
+  customer_id,
+  COUNT(distinct date(transaction_at)) - 1 as frequency,
+  datediff('day', MIN(transaction_at), MAX(transaction_at)) as recency,
+  AVG(total_price) as monetary_value,
+  datediff('day', CURRENT_DATE, MIN(transaction_at)) as T
+FROM orders
+GROUP BY customer_id
+'''
+
 # value of 0 in frequency and recency means that, these are one time buyers
 # Let's check how many such one time buyers are there in our data
 # Create a distribution of frequency to understand the customer frequence level
 summary['frequency'].plot(kind='hist', bins=50)
 
 # Fitting the BG/NBD model
+# Beta Geo Fitter, also known as BG/NBD model.
 bgf = lifetimes.BetaGeoFitter(penalizer_coef=0.0)
 bgf.fit(summary['frequency'], summary['recency'], summary['T'])
 
@@ -222,6 +234,7 @@ summary.sort_values(by='pred_num_txn', ascending=False).head(10).reset_index()
 
 
 # Gamma-Gamma Model
+# lifetimes.fitters.gamma_gamma_fitter module also known as Gamma-Gamma Model
 # Now that we predicted the expected future transactions, we now need to predict the future monetary value of each transactions.
 '''
 Some of the key assumptions of Gamma-Gamma model are:
@@ -295,5 +308,4 @@ summary.head()
 # Distribution of CLV for the business in the next 30 days
 summary['CLV'].describe()
 summary['CLV'].describe().plot(kind='hist', bins=50)
-
 
