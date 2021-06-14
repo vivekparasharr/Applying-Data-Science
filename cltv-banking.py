@@ -10,21 +10,7 @@ Predictive Approach:
 4. Probabilistic Model  —  it tries to fit a probability distribution to the data and estimates the future count of transactions and monetary value for each transaction.
 '''
 
-'''
-About the dataset -
-This is a transactional data set that contains all the transactions occurring between 01/12/2010 and 09/12/2011 for a UK-based and registered non-store online retail. The company mainly sells unique all-occasion gifts. Many customers of the company are wholesalers.
-Attribute Information:
-
-InvoiceNo: Invoice number. Nominal, a 6-digit integral number uniquely assigned to each transaction. If this code starts with letter ‘c’, it indicates a cancellation.
-StockCode: Product (item) code. Nominal, a 5-digit integral number uniquely assigned to each distinct product.
-Description: Product (item) name. Nominal.
-Quantity: The quantities of each product (item) per transaction. Numeric.
-InvoiceDate: Invoice Date and time. Numeric, the day and time when each transaction was generated.
-UnitPrice: Unit price. Numeric, Product price per unit in sterling.
-CustomerID: Customer number. Nominal, a 5-digit integral number uniquely assigned to each customer.
-Country: Country name. Nominal, the name of the country where each customer resides.
-'''
-
+import sqlite3
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,12 +18,115 @@ import seaborn as sns
 import dataprep.eda as dp
 
 ##############################################################
+######   move czech bank (berka) data to a sql database ######
+##############################################################
 
 # importing the dataset
-df = pd.read_excel('/Volumes/sandisk8gb/Documents/Code/Customer-Analytics/Data/Online_Retail.xlsx')
-df.head(1)
+client = pd.read_csv('/Volumes/sandisk8gb/Documents/Code/Customer-Analytics/Data/czech-bank-berka/data/client.csv')
+
+# create a database
+conn = sqlite3.connect('/Volumes/sandisk8gb/Documents/Code/Customer-Analytics/Data/czech-bank-berka/data/czech-bank-berka.db')
+c = conn.cursor()
+
+# create an empty table in db to save the df
+c.execute('CREATE TABLE client (client_id number, birth_number number, district_id number)') # column data type can be text or number
+conn.commit()
+
+# save from pandas df to sql db
+client.to_sql('client', conn, if_exists='replace', index = False)  
+
+# access data from SQL database (recurse over data using for loop)
+c.execute('''  SELECT * FROM client where client_id<10 ''')
+for row in c.fetchall():
+    print (row)
+
+# Pull  data into a dataframe
+c.execute('''  SELECT client_id, birth_number FROM client ''')
+df2 = pd.DataFrame(c.fetchall(), columns=['client_id','birth_number'])    
+
+# drop the table
+c.execute('DROP TABLE client') 
+
+# close connection
+c.close() 
 
 ##############################################################
+
+conn = sqlite3.connect('/Volumes/sandisk8gb/Documents/Code/Customer-Analytics/Data/td-bank/td-bank.db')
+c = conn.cursor()
+c.execute('''  SELECT * FROM rfm ''')
+df = pd.DataFrame(c.fetchall(), columns=['customerid','frequency', 'recency', 'monetry_value', 'T'])    
+
+# aggregate model
+# Calculating the necessary variables for CLV calculation
+df['TotalSales'] = df.frequency * df.monetry_value
+
+Average_sales = round(np.mean(df.TotalSales),2)
+print(f"Average sales: ${Average_sales}")
+
+Purchase_freq = round(np.mean(df.frequency), 2)
+print(f"Purchase Frequency: {Purchase_freq}")
+
+Retention_rate = df[df.frequency>1].shape[0]/df.shape[0]
+churn = round(1 - Retention_rate, 2)
+print(f"Churn: {churn}%")
+
+# assuming the Profit margin for each transaction to be roughly 5%
+Profit_margin = 0.05
+
+# Calculating the CLV
+CLV = round(((Average_sales * Purchase_freq/churn)) * Profit_margin, 2)
+print(f"The Customer Lifetime Value (CLV) for each customer is: ${CLV}")
+
+##############################################################
+
+# Cohort Model
+# Instead of assuming all customers to be one group, we split them into multiple groups and calculate the CLV for each group
+# most common way to group customers into cohorts is by the start date of a customer, typically by month
+# best choice will depend on the customer acquisition rate, seasonality of business, and whether additional customer information can be used
+
+# Transforming the data to customer level for the analysis
+df = df.groupby('CustomerID').agg(
+    {'InvoiceDate':lambda x: x.min().month, 
+    'InvoiceNo': lambda x: len(x),
+    'TotalSales': lambda x: sum(x)}
+    )
+df3.columns = ['Start_Month', 'Frequency', 'TotalSales'] # rename Age to Start_Month  
+
+# handle division by 0
+def weird_division(n, d):
+    return n / d if d else 0
+
+# Calculating CLV for each cohort
+months = ['Jan', 'Feb', 'March', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+Monthly_CLV = []
+
+for i in range(1, 13):
+    customer_m = df3[df3.Start_Month==i]
+    
+    Average_sales = round(np.mean(customer_m.TotalSales),2)
+    
+    Purchase_freq = round(np.mean(customer_m.Frequency), 2)
+    
+    Retention_rate = customer_m[customer_m.Frequency>1].shape[0]/customer_m.shape[0]
+    churn = round(1 - Retention_rate, 2)
+    
+    CLV = round(((Average_sales * weird_division(Purchase_freq, churn))) * Profit_margin, 2)
+    
+    Monthly_CLV.append(CLV)
+
+# review the output
+monthly_clv = pd.DataFrame(zip(months, Monthly_CLV), columns=['Months', 'CLV'])
+display(monthly_clv.style.background_gradient())
+
+'''
+we have 12 different CLV value for 12 months from Jan-Dec. And it is pretty clear that, customers who are acquired in different months have different CLV values attached to them. This is because, they could be acquired using different campaigns etc., so thier behaviour might be different from others
+'''
+
+##############################################################
+
+
+
 
 # cleaning the dataset
 # select features we need - CustomerID, InvoiceDate, Quantity and Total Sales (Quantity * UnitPrice)
