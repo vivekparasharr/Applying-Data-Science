@@ -85,13 +85,13 @@ print(f"The Customer Lifetime Value (CLV) for each customer is: ${CLV}")
 # most common way to group customers into cohorts is by the start date of a customer, typically by month
 # best choice will depend on the customer acquisition rate, seasonality of business, and whether additional customer information can be used
 
-# Transforming the data to customer level for the analysis
-df = df.groupby('CustomerID').agg(
-    {'InvoiceDate':lambda x: x.min().month, 
-    'InvoiceNo': lambda x: len(x),
-    'TotalSales': lambda x: sum(x)}
-    )
-df3.columns = ['Start_Month', 'Frequency', 'TotalSales'] # rename Age to Start_Month  
+conn = sqlite3.connect('/Volumes/sandisk8gb/Documents/Code/Customer-Analytics/Data/td-bank/td-bank.db')
+c = conn.cursor()
+c.execute('''  SELECT * FROM rfm ''')
+df = pd.DataFrame(c.fetchall(), columns=['customerid', 'start_month', 'frequency', 'recency', 'monetry_value', 'T', 'total_sales'])    
+
+# assuming the Profit margin for each transaction to be roughly 5%
+Profit_margin = 0.05
 
 # handle division by 0
 def weird_division(n, d):
@@ -102,17 +102,13 @@ months = ['Jan', 'Feb', 'March', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'
 Monthly_CLV = []
 
 for i in range(1, 13):
-    customer_m = df3[df3.Start_Month==i]
-    
-    Average_sales = round(np.mean(customer_m.TotalSales),2)
-    
-    Purchase_freq = round(np.mean(customer_m.Frequency), 2)
-    
-    Retention_rate = customer_m[customer_m.Frequency>1].shape[0]/customer_m.shape[0]
+    customer_m = df[df.start_month==i]
+    Average_sales = round(np.mean(customer_m.total_sales),2)
+    Purchase_freq = round(np.mean(customer_m.frequency), 2)
+    #Retention_rate = customer_m[customer_m.frequency>1].shape[0]/customer_m.shape[0]
+    Retention_rate = customer_m[customer_m.frequency>1].shape[0]/customer_m.shape[0]
     churn = round(1 - Retention_rate, 2)
-    
     CLV = round(((Average_sales * weird_division(Purchase_freq, churn))) * Profit_margin, 2)
-    
     Monthly_CLV.append(CLV)
 
 # review the output
