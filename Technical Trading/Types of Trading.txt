@@ -1,0 +1,100 @@
+
+
+Different Types of Trading
+
+​Before we focus on technical trading, here's a review of the main 
+types of equity trading:
+
+1. Scalping: The scalper is an individual who makes dozens or hundreds 
+of trades per day in an attempt to "scalp" a small profit from each trade 
+by exploiting the bid-ask spread.
+
+2. Momentum Trading: Momentum traders seek stocks that are moving 
+significantly in one direction in high volume. These traders attempt to 
+ride the momentum to the desired profit.
+
+3. Technical Trading:  Technical traders focus on charts and graphs. 
+They watch lines on stock or index graphs for signs of convergence or 
+divergence that might indicate buy or sell signals.
+
+4. Fundamental Trading: Fundamentalists trade companies based on fundamental 
+analysis, which examines corporate events such as actual or anticipated 
+earnings reports, stock splits, reorganizations, or acquisitions.
+
+5. Swing Trading: Swing traders are fundamental traders who hold their 
+positions longer than a single day. Most fundamentalists are actually 
+swing traders since changes in corporate fundamentals typically require 
+several days or even weeks to produce a price movement sufficient enough 
+for the trader to claim a reasonable profit.
+
+###############################################################################
+
+https://www.investopedia.com/articles/trading/02/091802.asp
+Technical Trading - Common Groups of Technical Indicators:
+
+1. Relative Strength Index (RSI): This measures a stock's recent performance 
+in relation to its historical strength by comparing the number and magnitude of 
+recent and historical up and down closes. If the RSI rises above 80, this may 
+indicate an overbought condition, which is a sell signal. Below 20, the RSI may 
+indicate an oversold stock, which is a buy signal.
+
+2. Range Trading:  A series of high, low, and closing prices are plotted on a 
+graph for a certain period of time, and support and resistance lines are drawn 
+across the bottom and top of the range. A breakout occurs when the price 
+sustains a movement, even for a period or two, above or below the range.
+
+3. Pattern Analysis: This may be the form of technical analysis that is easiest 
+to understand. The same price charts discussed above are analyzed for specific 
+patterns that have historically appeared in the same stock or for common patterns 
+that have been seen in many stocks over time. The most commonly observed patterns 
+are head-and-shoulders patterns, triangle-up or triangle-down patterns, rounded 
+tops or rounded bottoms, cup-and-handle formation, and so on.
+
+4. Trend Analysis: Highly complex and mathematical trend analysis looks at short 
+and long-term trends and tries to identify crossovers, where prices cross over 
+their long-term averages. The long-term averages are referred to as moving averages,
+where a price range is smoothed for a period of time by averaging a series of data 
+points and plotting the smoothed line against the actual price line of the stock. 
+The moving average convergence divergence (MACD) is used to identify crossovers, 
+divergence, and convergence, and overbought and oversold conditions.
+
+5. Gap Analysis: A gap occurs when the opening price of a stock is significantly 
+higher or lower than its closing price the previous day, possibly because of 
+company news released overnight or some other factor. The gap trader is concerned 
+with the performance of the stock above or below its open, which may indicate 
+further movement in either direction. In this sense, the trader's decisions 
+may be closer in style to that of the momentum trader than the technical analyst.
+
+
+###############################################################################
+
+https://www.investopedia.com/terms/t/trendanalysis.asp
+
+Trend Analysis - Trading Strategies
+
+Trend traders attempt to isolate and extract profit from trends. There are 
+many different trend trading strategies using a variety of technical indicators:
+
+1. Moving Averages: These strategies involve entering into long positions when 
+a short-term moving average crosses above a long-term moving average, and entering 
+short positions when a short-term moving average crosses below a long-term 
+moving average.
+
+2. Momentum Indicators: These strategies involve entering into long positions 
+when a security is trending with strong momentum and exiting long positions 
+when a security loses momentum. Often, the relative strength index (RSI) is 
+used in these strategies.
+
+3. Trendlines & Chart Patterns: These strategies involve entering long 
+positions when a security is trending higher and placing a stop-loss below 
+key trendline support levels. If the stock starts to reverse, the position 
+is exited for a profit.
+
+https://www.investopedia.com/articles/active-trading/041814/four-most-commonlyused-indicators-trend-trading.asp
+Trend Trading: The 4 Most Common Indicators
+1. Moving Averages 
+2. Moving Average Convergence Divergence (MACD) 
+3. Relative Strength Index (RSI) 
+4. On-Balance Volume (OBV) 
+
+
